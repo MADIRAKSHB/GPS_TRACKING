@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Vehicle Tracking Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="header">
+    🚗 Smart Live Vehicle Tracking System
+</div>
+
+<div class="container">
+    
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+        <div class="card">
+            <h3>📡 Vehicle Status</h3>
+            <div id="status" class="status offline">Waiting for GPS...</div>
+        </div>
+
+        <div class="card">
+            <h3>📍 Current Latitude</h3>
+            <div id="lat">0.000000</div>
+        </div>
+
+        <div class="card">
+            <h3>📍 Current Longitude</h3>
+            <div id="lon">0.000000</div>
+        </div>
+
+        <div class="card">
+            <h3>🛰️ Tracking Mode</h3>
+            <div>Live Auto Tracking Enabled</div>
+        </div>
+
+    </div>
+
+    <!-- Map Area -->
+    <div id="map"></div>
+
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Booking JS -->
+<script src="/static/booking.js"></script>
+
+</body>
+</html>
