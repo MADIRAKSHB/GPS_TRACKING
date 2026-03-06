@@ -1,0 +1,104 @@
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <TinyGPS++.h>
+
+// WIFI
+const char* ssid = "USERNAME";
+const char* password = "PASSWORD";
+
+// YOUR PC IP (CORRECT)
+String serverURL = "http://0.0.0:5000/update";
+// Firebase URL
+String firebaseURL = "https://gps-tracking-1234-default-rtdb.firebaseio.com/devices/device_01.json";
+
+// GPS
+TinyGPSPlus gps;
+HardwareSerial GPS(2);
+
+#define GPS_RX 16
+#define GPS_TX 17
+
+unsigned long lastSendTime = 0;
+const unsigned long sendInterval = 5000;
+
+void setup() {
+
+  Serial.begin(115200);
+
+  GPS.begin(9600, SERIAL_8N1, GPS_RX, GPS_TX);
+
+  WiFi.begin(ssid, password);
+
+  Serial.print("Connecting WiFi");
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("\nWiFi Connected");
+  Serial.println(WiFi.localIP());
+}
+
+void loop() {
+
+  while (GPS.available()) {
+    gps.encode(GPS.read());
+  }
+
+  if (gps.location.isValid()) {
+
+    double lat = gps.location.lat();
+    double lon = gps.location.lng();
+    double speed = gps.speed.kmph();
+    double altitude = gps.altitude.meters();
+    int sats = gps.satellites.value();
+    double hdop = gps.hdop.hdop();
+
+    Serial.println("GPS DATA");
+    Serial.println(lat,6);
+    Serial.println(lon,6);
+
+    if (millis() - lastSendTime > sendInterval) {
+
+      sendToFirebase(lat, lon, speed, altitude, sats, hdop);
+      lastSendTime = millis();
+
+    }
+
+  } else {
+
+    Serial.println("Waiting GPS fix...");
+
+  }
+
+  delay(1000);
+}
+
+void sendToFirebase(double lat, double lon, double speed, double altitude, int sats, double hdop) {
+
+  if (WiFi.status() == WL_CONNECTED) {
+
+    HTTPClient http;
+
+    http.begin(firebaseURL);
+    http.addHeader("Content-Type", "application/json");
+
+    String jsonData = "{";
+    jsonData += "\"latitude\":" + String(lat,6) + ",";
+    jsonData += "\"longitude\":" + String(lon,6) + ",";
+    jsonData += "\"speed_kmph\":" + String(speed,2) + ",";
+    jsonData += "\"altitude_m\":" + String(altitude,2) + ",";
+    jsonData += "\"satellites\":" + String(sats) + ",";
+    jsonData += "\"hdop\":" + String(hdop,2) + ",";
+    jsonData += "\"last_update\":" + String(millis()/1000);
+    jsonData += "}";
+
+    int httpResponseCode = http.PUT(jsonData);
+
+    Serial.print("HTTP Response: ");
+    Serial.println(httpResponseCode);
+
+    http.end();
+  }
+}
